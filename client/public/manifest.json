@@ -1,0 +1,15 @@
+{
+  "short_name": "Voice activated lightshow",
+  "name": "This skill will change your home into the most amazing disco you have ever seen.",
+  "icons": [
+    {
+      "src": "favicon.ico",
+      "sizes": "64x64 32x32 24x24 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "start_url": ".",
+  "display": "standalone",
+  "theme_color": "#000000",
+  "background_color": "#ffffff"
+}
