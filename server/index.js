@@ -10,6 +10,7 @@ const {
   LaunchRequestHandler,
   StartLightshowHandler,
   StopIntentHandler,
+  CancelIntentHandler,
   ErrorHandler
 } = require("./intents/DefaultIntents");
 
@@ -29,7 +30,8 @@ app.post("/alexa", async (req, res) => {
       .addRequestHandlers(
         LaunchRequestHandler,
         StartLightshowHandler,
-        StopIntentHandler
+        CancelIntentHandler,
+        StopIntentHandler,
       )
       .addErrorHandlers(ErrorHandler)
       .create();
@@ -57,4 +59,4 @@ app.post("/alexa", async (req, res) => {
   }
 });
 
-app.listen(port, () => console.log(`Example app listening on port ${port}!`));
+app.listen(port, () => console.log(`Voice lightshow listening on port ${port}!`));

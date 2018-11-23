@@ -15,6 +15,8 @@ const LaunchRequestHandler = {
     // Check if it's the right intent
     const { request } = handlerInput.requestEnvelope;
 
+    console.log(request);
+
     return request.type === "LaunchRequest";
   },
   async handle(handlerInput) {
@@ -29,6 +31,22 @@ const StopIntentHandler = {
     return (
       request.type === "IntentRequest" &&
       request.intent.name === "AMAZON.StopIntent"
+    );
+  },
+  async handle(handlerInput) {
+    await stopLightshow();
+
+    return handlerInput.responseBuilder.speak("See you next time!");
+  }
+};
+
+const CancelIntentHandler = {
+  canHandle(handlerInput) {
+    const { request } = handlerInput.requestEnvelope;
+
+    return (
+      request.type === "IntentRequest" &&
+      request.intent.name === "AMAZON.CancelIntent"
     );
   },
   async handle(handlerInput) {
@@ -139,10 +157,7 @@ async function linkBridge(handlerInput) {
       </speak>
       `;
 
-    return handlerInput.responseBuilder
-      .speak(ssml_response)
-      .getResponse();
-
+    return handlerInput.responseBuilder.speak(ssml_response).getResponse();
   } catch (e) {
     console.log(e);
     return handlerInput.responseBuilder
@@ -160,14 +175,45 @@ async function startLightshow(lights) {
   // The first part takes about 2500 to start
   lightshow_counter += 2500;
 
-  const colors_one = [12750, 46920, 25500];
-  const colors_two = [65535, 21845, 12750];
-  const colors_three = [65535, 0, 12750];
-  const colors_four = [0, 21845, 0];
+  const colors_one = [
+    12750,
+    46920,
+    25500,
+    12750,
+    46920,
+    25500,
+    12750,
+    46920,
+    25500
+  ];
+  const colors_two = [
+    65535,
+    21845,
+    12750,
+    65535,
+    21845,
+    12750,
+    65535,
+    21845,
+    12750
+  ];
+  const colors_three = [
+    65535,
+    46920,
+    12750,
+    65535,
+    46920,
+    12750,
+    65535,
+    46920,
+    12750
+  ];
+  const colors_four = [50000, 21845, 0, 50000, 21845, 0, 50000, 21845, 0];
+  const colors_five = [0, 21845, 50000, 0, 21845, 50000, 0, 21845, 50000];
 
   setTimeout(() => {
     lights.map((light, index) => {
-      blinkLight(light, colors_one[index]);
+      blinkLight(light, colors_one[index], 180);
     });
   }, lightshow_counter);
 
@@ -175,48 +221,38 @@ async function startLightshow(lights) {
 
   setTimeout(() => {
     lights.map((light, index) => {
-      setColor(light, colors_three[index]);
-    });
-
-    setTimeout(() => {
-      lights.map((light, index) => {
-        setColor(light, colors_four[index]);
-      });
-    }, 1500);
-
-    setTimeout(() => {
-      lights.map((light, index) => {
-        setColor(light, colors_three[index]);
-      });
-    }, 3000);
-
-    setTimeout(() => {
-      lights.map((light, index) => {
-        setColor(light, colors_four[index]);
-      });
-    }, 4500);
-  }, lightshow_counter);
-
-  lightshow_counter += 4500;
-
-  setTimeout(() => {
-    lights.map((light, index) => {
       blinkLight(light, colors_two[index]);
     });
   }, lightshow_counter);
+
+  lightshow_counter += 15000;
+
+  setTimeout(() => {
+    lights.map((light, index) => {
+      blinkLight(light, colors_three[index], 180);
+    });
+  }, lightshow_counter);
+
+  lightshow_counter += 500;
+
+  setTimeout(() => {
+    setSceneColor(0, 0);
+  }, lightshow_counter);
+
 }
 
 /**
  * Set the color by ID
  */
-async function setColor(id, color) {
+async function setColor(id, color, saturation) {
   const control_the_lights = await fetch(
     `https://api.meethue.com/bridge/${username}/lights/${id}/state`,
     {
       method: "PUT",
       body: JSON.stringify({
         on: true,
-        hue: color
+        hue: color,
+        sat: saturation
       }),
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -231,7 +267,7 @@ async function setColor(id, color) {
 /**
  * Blink the light by ID
  */
-async function blinkLight(id, color) {
+async function blinkLight(id, color, saturation) {
   const control_the_lights = await fetch(
     `https://api.meethue.com/bridge/${username}/lights/${id}/state`,
     {
@@ -239,6 +275,7 @@ async function blinkLight(id, color) {
       body: JSON.stringify({
         on: true,
         hue: color,
+        sat: saturation,
         alert: "lselect"
       }),
       headers: {
@@ -252,14 +289,12 @@ async function blinkLight(id, color) {
 }
 
 async function stopLightshow(id) {
-  lights.map(async id => {
-    await turnOffLight(id);
-  });
+  turnOffLights();
 }
 
-async function turnOffLight(id) {
+async function turnOffLights() {
   const control_the_lights = await fetch(
-    `https://api.meethue.com/bridge/${username}/lights/${id}/state`,
+    `https://api.meethue.com/bridge/${username}/groups/0/action`,
     {
       method: "PUT",
       body: JSON.stringify({
@@ -275,9 +310,34 @@ async function turnOffLight(id) {
   const control_the_lights_json = await control_the_lights.json();
 }
 
+/**
+ * Start a scene
+ */
+async function setSceneColor(color, saturation) {
+  const control_the_lights = await fetch(
+    `https://api.meethue.com/bridge/${username}/groups/0/action`,
+    {
+      method: "PUT",
+      body: JSON.stringify({
+          on: true,
+          hue: color,
+          sat: saturation
+
+      }),
+      headers: {
+        Authorization: `Bearer ${access_token}`,
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  const control_the_lights_json = await control_the_lights.json();
+}
+
 module.exports = {
   StartLightshowHandler,
   LaunchRequestHandler,
   ErrorHandler,
-  StopIntentHandler
+  StopIntentHandler,
+  CancelIntentHandler
 };
