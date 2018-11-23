@@ -1,0 +1,19 @@
+{
+  "name": "voice-lightshow-hub",
+  "version": "1.0.0",
+  "description": "A voice controlled lightshow",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon index.js",
+    "simulate": "ttab -w ngrok http 3000",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "ask-sdk": "^2.3.0",
+    "dotenv": "^6.1.0",
+    "express": "^4.16.4",
+    "node-fetch": "^2.3.0"
+  }
+}
