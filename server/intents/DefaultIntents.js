@@ -4,8 +4,6 @@ let username = null;
 let access_token = null;
 let lights = [];
 
-// @TODO: Create privacy policy pages
-
 // @TODO: Create demo video
 
 // @TODO: Create product page (optional?)
@@ -15,7 +13,7 @@ const LaunchRequestHandler = {
     // Check if it's the right intent
     const { request } = handlerInput.requestEnvelope;
 
-    console.log(request);
+    // console.log(request);
 
     return request.type === "LaunchRequest";
   },
