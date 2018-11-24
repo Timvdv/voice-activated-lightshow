@@ -5,6 +5,21 @@ import "./App.css";
 import PrivacyPolicy from "./PrivacyPolicy";
 import TermsOfService from "./TermsOfService";
 
+const Video = () => (
+  <div>
+    <Link to="/" className="button-back">Voice activated lightshow</Link>
+    <iframe
+      title="demo video"
+      className="full-screen-video"
+      src="https://player.vimeo.com/video/302561329?autoplay=1&loop=1&autopause=0"
+      frameborder="0"
+      webkitallowfullscreen
+      mozallowfullscreen
+      allowfullscreen
+    />
+  </div>
+);
+
 const Index = () => (
   <header className="App-header">
     <img
@@ -12,28 +27,38 @@ const Index = () => (
       className="App-logo"
       alt="logo"
     />
-    <p>Voice activated lightshow</p>
+    <h2>Voice activated lightshow</h2>
 
-    <a
+    <p className="info-text">Currently in Beta (only 500 spots!)</p>
+
+    <div className="row">
+      <Link to="/video" src="https://vimeo.com/302561329" className="button demo-button">
+        Demo video
+      </Link>
+
+      <a
+        href="https://www.producthunt.com/upcoming/voice-lightshow"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="button beta-button"
+      >
+        Request Beta invite!
+      </a>
+    </div>
+
+    {/* <a
       className="App-link"
       href="https://reactjs.org"
       target="_blank"
       rel="noopener noreferrer"
     >
       Install the skill on Amazon Alexa
-    </a>
+    </a> */}
 
     <footer>
-      <Link to="/privacy">
-        Privacy Policy
-      </Link>
-
-      {" "}-{" "}
-
-      <Link to="/tos">
-        Terms of Service
-      </Link>
-    </footer>    
+      <Link to="/privacy">Privacy Policy</Link> -{" "}
+      <Link to="/tos">Terms of Service</Link>
+    </footer>
   </header>
 );
 
@@ -45,6 +70,7 @@ class App extends Component {
           <Route path="/" exact component={Index} />
           <Route path="/privacy" component={PrivacyPolicy} />
           <Route path="/tos" component={TermsOfService} />
+          <Route path="/video" component={Video} />
         </div>
       </Router>
     );

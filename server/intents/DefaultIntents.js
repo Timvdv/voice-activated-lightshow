@@ -32,7 +32,7 @@ const StopIntentHandler = {
     );
   },
   async handle(handlerInput) {
-    await stopLightshow();
+    await setSceneColor(0, 0);
 
     return handlerInput.responseBuilder.speak("See you next time!");
   }
@@ -48,7 +48,7 @@ const CancelIntentHandler = {
     );
   },
   async handle(handlerInput) {
-    await stopLightshow();
+    await setSceneColor(0, 0);
 
     return handlerInput.responseBuilder.speak("See you next time!");
   }
@@ -68,11 +68,29 @@ const StartLightshowHandler = {
   }
 };
 
+const StopLightshowHandler = {
+  canHandle(handlerInput) {
+    const { request } = handlerInput.requestEnvelope;
+
+    return (
+      request.type === "IntentRequest" &&
+      request.intent.name === "StopLightshow"
+    );
+  },
+  async handle(handlerInput) {
+    await setSceneColor(0, 0);
+
+    return handlerInput.responseBuilder
+      .speak("Alright, I stopped the lightshow")
+  }
+};
+
 const ErrorHandler = {
   canHandle() {
     return true;
   },
-  handle(handlerInput, error) {
+  async handle(handlerInput, error) {
+    await setSceneColor(0, 0);
     console.log(`Error handled: ${error.message}`);
 
     return handlerInput.responseBuilder
@@ -141,7 +159,7 @@ async function linkBridge(handlerInput) {
     for (light in get_the_lights_json) {
       const light_id = parseInt(light);
 
-      if (light_id < 10) {
+      if (light_id < 14) {
         lights.push(parseInt(light));
       }
     }
@@ -296,7 +314,8 @@ async function turnOffLights() {
     {
       method: "PUT",
       body: JSON.stringify({
-        on: false
+        on: false,
+        alert: "none"
       }),
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -319,8 +338,8 @@ async function setSceneColor(color, saturation) {
       body: JSON.stringify({
           on: true,
           hue: color,
-          sat: saturation
-
+          sat: saturation,
+          alert: "none"
       }),
       headers: {
         Authorization: `Bearer ${access_token}`,
@@ -337,5 +356,6 @@ module.exports = {
   LaunchRequestHandler,
   ErrorHandler,
   StopIntentHandler,
-  CancelIntentHandler
+  CancelIntentHandler,
+  StopLightshowHandler
 };

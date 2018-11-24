@@ -11,7 +11,8 @@ const {
   StartLightshowHandler,
   StopIntentHandler,
   CancelIntentHandler,
-  ErrorHandler
+  ErrorHandler,
+  StopLightshowHandler
 } = require("./intents/DefaultIntents");
 
 let skill = null;
@@ -19,10 +20,11 @@ let skill = null;
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
-app.use('/static', express.static(__dirname + '/../client/build/static'));
-app.use('/', express.static(__dirname + '/../client/build'));
-app.use('/tos', express.static(__dirname + '/../client/build'));
-app.use('/privacy', express.static(__dirname + '/../client/build'));
+app.use('/static', express.static(__dirname + `${ process.env.LOCAL_CLIENT_PATH || "/client"}/build/static`));
+app.use('/', express.static(__dirname + `${ process.env.LOCAL_CLIENT_PATH || "/client"}/build`));
+app.use('/tos', express.static(__dirname + `${ process.env.LOCAL_CLIENT_PATH || "/client"}/build`));
+app.use('/privacy', express.static(__dirname + `${ process.env.LOCAL_CLIENT_PATH || "/client"}/build`));
+app.use('/video', express.static(__dirname + `${ process.env.LOCAL_CLIENT_PATH || "/client"}/build`));
 
 app.post("/alexa", async (req, res) => {
   if (!skill) {
@@ -32,6 +34,7 @@ app.post("/alexa", async (req, res) => {
         StartLightshowHandler,
         CancelIntentHandler,
         StopIntentHandler,
+        StopLightshowHandler
       )
       .addErrorHandlers(ErrorHandler)
       .create();

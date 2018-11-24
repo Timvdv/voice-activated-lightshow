@@ -46,6 +46,48 @@ footer a:hover {
   color: #61dafb;
 }
 
+.button {
+  padding: 20px;
+  color: white;
+  font-size: 16px;
+  display: inline-block;
+  margin: 10px;
+  border-radius: 4px;
+  cursor: pointer;
+  background: #2196f330;
+  border:none;
+  text-decoration: none;
+}
+
+.button:hover {
+  box-shadow: 0 0 11px rgba(0,0,0,.9); 
+}
+
+.info-text {
+  font-size: 20px;
+  font-weight: 300;
+}
+
+.beta-button {
+  background: #6bbef6;
+}
+
+.demo-button {
+  
+}
+
+.button-back {
+  position: absolute;
+  left: 20px;
+  top: 20px;
+  color: white;
+}
+
+.full-screen-video {
+  width: 100vw;
+  height: 100vh;
+}
+
 @keyframes App-logo-spin {
   from {
     transform: rotate(0deg);
