@@ -12,7 +12,8 @@ const {
   StopIntentHandler,
   CancelIntentHandler,
   ErrorHandler,
-  StopLightshowHandler
+  StopLightshowHandler,
+  SessionEndedRequestHandler,
 } = require("./intents/DefaultIntents");
 
 let skill = null;
@@ -34,7 +35,8 @@ app.post("/alexa", async (req, res) => {
         StartLightshowHandler,
         CancelIntentHandler,
         StopIntentHandler,
-        StopLightshowHandler
+        StopLightshowHandler,
+        SessionEndedRequestHandler
       )
       .addErrorHandlers(ErrorHandler)
       .create();

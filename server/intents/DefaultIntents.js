@@ -1,23 +1,27 @@
 const fetch = require("node-fetch");
 
+const { getHandlerInput } = require("./shared");
+
 let username = null;
 let access_token = null;
 let lights = [];
 
-// @TODO: Create demo video
-
-// @TODO: Create product page (optional?)
+let isPlaying = false;
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
     // Check if it's the right intent
     const { request } = handlerInput.requestEnvelope;
 
-    // console.log(request);
-
     return request.type === "LaunchRequest";
   },
   async handle(handlerInput) {
+    const { attributes } = getHandlerInput(handlerInput);
+
+    attributes.isPlaying = true;
+    // wrong way but attributes dont work 
+    isPlaying = true;
+
     return linkBridge(handlerInput);
   }
 };
@@ -32,9 +36,15 @@ const StopIntentHandler = {
     );
   },
   async handle(handlerInput) {
+    const { attributes } = getHandlerInput(handlerInput);
+
+    attributes.isPlaying = false;
+    isPlaying = false;
+
     await setSceneColor(0, 0);
 
-    return handlerInput.responseBuilder.speak("See you next time!");
+    return handlerInput.responseBuilder
+      .speak("See you next time!");
   }
 };
 
@@ -48,6 +58,12 @@ const CancelIntentHandler = {
     );
   },
   async handle(handlerInput) {
+
+    const { attributes } = getHandlerInput(handlerInput);
+
+    attributes.isPlaying = false;
+    isPlaying = false;
+
     await setSceneColor(0, 0);
 
     return handlerInput.responseBuilder.speak("See you next time!");
@@ -70,7 +86,10 @@ const StartLightshowHandler = {
 
 const StopLightshowHandler = {
   canHandle(handlerInput) {
-    const { request } = handlerInput.requestEnvelope;
+    const { request, attributes } = getHandlerInput(handlerInput);
+
+    attributes.isPlaying = false;
+    isPlaying = false;
 
     return (
       request.type === "IntentRequest" &&
@@ -79,6 +98,8 @@ const StopLightshowHandler = {
   },
   async handle(handlerInput) {
     await setSceneColor(0, 0);
+
+    console.log("Custom stop handler");
 
     return handlerInput.responseBuilder
       .speak("Alright, I stopped the lightshow")
@@ -90,10 +111,16 @@ const ErrorHandler = {
     return true;
   },
   async handle(handlerInput, error) {
+    const { response, attributes } = getHandlerInput(handlerInput);
+    
+    attributes.isPlaying = false;
+    isPlaying = false;
+
     await setSceneColor(0, 0);
+    
     console.log(`Error handled: ${error.message}`);
 
-    return handlerInput.responseBuilder
+    return response
       .speak("Sorry, I can't understand the command. Please say again.")
       .reprompt("Sorry, I can't understand the command. Please say again.")
       .getResponse();
@@ -101,6 +128,9 @@ const ErrorHandler = {
 };
 
 async function linkBridge(handlerInput) {
+
+  const { response, attributes } = getHandlerInput(handlerInput);
+
   if (
     handlerInput.requestEnvelope &&
     handlerInput.requestEnvelope.session &&
@@ -116,6 +146,21 @@ async function linkBridge(handlerInput) {
   access_token = handlerInput.requestEnvelope.session.user.accessToken;
 
   try {
+    // Refresh token not working yet
+
+    // const refresh = await fetch("https://api.meethue.com/oauth2/refresh?grant_type=refresh_token", {
+    //   method: "POST",
+    //   body: JSON.stringify({}),
+    //   headers: {
+    //     Authorization: `Bearer ${access_token}`,
+    //     "Content-Type": "application/json"
+    //   }
+    // });
+
+    // const refresh_result = await refresh.json();
+
+    // console.log(refresh_result);
+
     const request = await fetch("https://api.meethue.com/bridge/0/config", {
       method: "PUT",
       body: JSON.stringify({ linkbutton: true }),
@@ -126,6 +171,15 @@ async function linkBridge(handlerInput) {
     });
 
     const json_result = await request.json();
+
+    console.log(json_result);
+
+    if(json_result && json_result.fault) {
+      return handlerInput.responseBuilder
+        .speak("Sorry! Your access token expired, please try unlinking the app and then install the app again. This should be fixed soon.")
+        .getResponse();
+      // throw new Error(json_result.fault.faultstring)
+    }
 
     const add_bridge_whitelist = await fetch("https://api.meethue.com/bridge", {
       method: "POST",
@@ -164,7 +218,7 @@ async function linkBridge(handlerInput) {
       }
     }
 
-    startLightshow(lights);
+    startLightshow(lights, handlerInput);
 
     const ssml_response = `
       <speak>
@@ -173,7 +227,11 @@ async function linkBridge(handlerInput) {
       </speak>
       `;
 
-    return handlerInput.responseBuilder.speak(ssml_response).getResponse();
+    return handlerInput.responseBuilder
+      .speak(ssml_response)
+      .reprompt('Enjoy ')
+      .withSimpleCard('Lightshow', 'Enjoy this amazing lightshow')
+      .getResponse();
   } catch (e) {
     console.log(e);
     return handlerInput.responseBuilder
@@ -183,10 +241,28 @@ async function linkBridge(handlerInput) {
 }
 
 /**
+ * When the sessions ends for some reason.
+ */
+const SessionEndedRequestHandler = {
+  canHandle(handlerInput) {
+    console.log(handlerInput.requestEnvelope);
+    return handlerInput.requestEnvelope.request.type === "SessionEndedRequest";
+  },
+  async handle(handlerInput) {
+    console.log("Session ended");
+    await setSceneColor(0, 0);
+    
+    return handlerInput.responseBuilder.getResponse();
+  }
+};
+
+/**
  * The actual lightshow
  */
-async function startLightshow(lights) {
+async function startLightshow(lights, handlerInput) {
   let lightshow_counter = 0;
+
+  let { attributes } = getHandlerInput(handlerInput);
 
   // The first part takes about 2500 to start
   lightshow_counter += 2500;
@@ -236,17 +312,29 @@ async function startLightshow(lights) {
   lightshow_counter += 15000;
 
   setTimeout(() => {
-    lights.map((light, index) => {
-      blinkLight(light, colors_two[index]);
-    });
+    let { attributes } = getHandlerInput(handlerInput);
+
+    console.log(attributes);
+
+    if(isPlaying) {
+      lights.map((light, index) => {
+        blinkLight(light, colors_two[index]);
+      });
+    }
   }, lightshow_counter);
 
   lightshow_counter += 15000;
 
   setTimeout(() => {
-    lights.map((light, index) => {
-      blinkLight(light, colors_three[index], 180);
-    });
+    let { attributes } = getHandlerInput(handlerInput);
+
+    console.log(attributes);
+
+    if(isPlaying) {
+      lights.map((light, index) => {
+        blinkLight(light, colors_three[index], 180);
+      });
+    }
   }, lightshow_counter);
 
   lightshow_counter += 500;
@@ -357,5 +445,6 @@ module.exports = {
   ErrorHandler,
   StopIntentHandler,
   CancelIntentHandler,
-  StopLightshowHandler
+  StopLightshowHandler,
+  SessionEndedRequestHandler
 };
