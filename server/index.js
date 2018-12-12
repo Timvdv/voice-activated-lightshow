@@ -48,7 +48,6 @@ app.post("/alexa", async (req, res) => {
       res.sendStatus(500);
     },
     succeed: data => {
-      // console.log(data)
       res.send(data);
     }
   };
