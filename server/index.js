@@ -2,9 +2,11 @@ require("dotenv").config();
 
 const express = require("express");
 const Alexa = require("ask-sdk");
+const verifier = require('alexa-verifier-middleware');
 
 const app = express();
 const port = 3033;
+
 
 const {
   LaunchRequestHandler,
@@ -18,6 +20,7 @@ const {
 
 let skill = null;
 
+app.use(verifier);
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 

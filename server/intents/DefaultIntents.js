@@ -172,11 +172,21 @@ async function linkBridge(handlerInput) {
 
     const json_result = await request.json();
 
-    console.log(json_result);
-
     if(json_result && json_result.fault) {
+
+      // if(json_result.faultstring === "Access Token expired") {
+      //   const renew = await fetch("https://api.meethue.com/oauth2/refresh?grant_type=refresh_token", {
+      //     method: "POST",
+      //     body: new URLSearchParams(`refresh_token=${access_token}`),
+      //     headers: {
+      //       Authorization: `Bearer ${access_token}`,
+      //       "Content-Type": "application/x-www-form-urlencoded"
+      //     }
+      //   });
+      // }
+
       return handlerInput.responseBuilder
-        .speak("Sorry! Your access token expired, please try unlinking the app and then install the app again. This should be fixed soon.")
+        .speak("Sorry! Your access token expired, please try unlinking the app and then linking the app again. This should be fixed soon.")
         .getResponse();
       // throw new Error(json_result.fault.faultstring)
     }
